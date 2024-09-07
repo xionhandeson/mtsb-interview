@@ -1,13 +1,15 @@
+require 'csv'
+
 def calculate_contributions(transactions, target_redemption, target_store)
   remaining_to_redeem = target_redemption
   final_contributions = {}
 
   transactions.each do |transaction|
-    store = transaction[:store]
-    collected = transaction[:collected]
+    store = transaction['Store']
+    collected = transaction['Collected'].to_i
 
     next if store == target_store
-
+    
     if remaining_to_redeem > 0
       contribution = [collected, remaining_to_redeem].min
 
@@ -25,24 +27,22 @@ def calculate_contributions(transactions, target_redemption, target_store)
   final_contributions
 end
 
-# Example transactions
-transactions = [
-  { date: '05/01/2020', phone: '60121224273', store: 'Foxtrot Sdn Bhd', collected: 157, redeemed: 0 },
-  { date: '15/01/2020', phone: '60121224273', store: 'Charlie Sdn Bhd', collected: 47, redeemed: 0 },
-  { date: '17/01/2020', phone: '60121224273', store: 'Foxtrot Sdn Bhd', collected: 121, redeemed: 0 },
-  { date: '20/01/2020', phone: '60121224273', store: 'Foxtrot Sdn Bhd', collected: 153, redeemed: 0 },
-  { date: '29/09/2020', phone: '60121224273', store: 'Alpha Sdn Bhd', collected: 51, redeemed: 250 }
-]
+# Read transactions from CSV file
+transactions = CSV.read('mtsb-interview.csv', headers: true)
+
+# Filter transactions by phone number
+phone_number = '60128846458'
+filtered_transactions = transactions.select { |transaction| transaction['Phone'] == phone_number }
 
 # Target redemption
-target_redemption = 250
+target_redemption = 500
 target_store = 'Alpha Sdn Bhd'
 
-# Step 2: Calculate contributions dynamically in FIFO manner
-final_contributions = calculate_contributions(transactions, target_redemption, target_store)
+# Calculate contributions dynamically in FIFO manner
+final_contributions = calculate_contributions(filtered_transactions, target_redemption, target_store)
 
-# Step 3: Output the result
+# Output the result
 puts "Final contributions (FIFO):"
 final_contributions.each do |store, amount|
-  puts "#{store} contributes #{amount}"
+  puts "#{store} contributes #{amount} to #{target_store}"
 end
